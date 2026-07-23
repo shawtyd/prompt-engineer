@@ -1,0 +1,1422 @@
+<title>Promptimizer — AI Prompt Engineering Coach</title>
+<style>
+  /* ── Token System ── */
+  :root {
+    --ink: #1C1E2E;
+    --ink-soft: #3A3D52;
+    --slate: #64697B;
+    --slate-light: #9499A8;
+    --paper: #FAFAF7;
+    --paper-warm: #F3F2ED;
+    --card: #FFFFFF;
+    --card-border: rgba(28, 30, 46, 0.08);
+    --amber: #C8964E;
+    --amber-soft: rgba(200, 150, 78, 0.12);
+    --amber-text: #9A7035;
+    --pool: #3B6B9E;
+    --pool-soft: rgba(59, 107, 158, 0.10);
+    --pool-hover: #2F5A87;
+    --sage: #4A8B6F;
+    --sage-soft: rgba(74, 139, 111, 0.10);
+    --rose: #B85C5C;
+    --rose-soft: rgba(184, 92, 92, 0.10);
+    --bar-track: #E8E7E3;
+    --focus-ring: rgba(59, 107, 158, 0.4);
+    --shadow-sm: 0 1px 3px rgba(28,30,46,0.06);
+    --shadow-md: 0 4px 16px rgba(28,30,46,0.08);
+    --radius: 10px;
+    --radius-sm: 6px;
+    --transition: 0.2s ease;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #E6E4DF;
+      --ink-soft: #B8B5AE;
+      --slate: #8E9199;
+      --slate-light: #6B6E78;
+      --paper: #111320;
+      --paper-warm: #161829;
+      --card: #1C1F30;
+      --card-border: rgba(230, 228, 223, 0.07);
+      --amber-text: #D4A85C;
+      --amber-soft: rgba(200, 150, 78, 0.15);
+      --pool-soft: rgba(59, 107, 158, 0.15);
+      --pool-hover: #5A8FC4;
+      --sage-soft: rgba(74, 139, 111, 0.15);
+      --rose-soft: rgba(184, 92, 92, 0.15);
+      --bar-track: #2A2D3E;
+      --focus-ring: rgba(90, 143, 196, 0.4);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ink: #E6E4DF;
+    --ink-soft: #B8B5AE;
+    --slate: #8E9199;
+    --slate-light: #6B6E78;
+    --paper: #111320;
+    --paper-warm: #161829;
+    --card: #1C1F30;
+    --card-border: rgba(230, 228, 223, 0.07);
+    --amber-text: #D4A85C;
+    --amber-soft: rgba(200, 150, 78, 0.15);
+    --pool-soft: rgba(59, 107, 158, 0.15);
+    --pool-hover: #5A8FC4;
+    --sage-soft: rgba(74, 139, 111, 0.15);
+    --rose-soft: rgba(184, 92, 92, 0.15);
+    --bar-track: #2A2D3E;
+    --focus-ring: rgba(90, 143, 196, 0.4);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
+  }
+
+  :root[data-theme="light"] {
+    --ink: #1C1E2E;
+    --ink-soft: #3A3D52;
+    --slate: #64697B;
+    --slate-light: #9499A8;
+    --paper: #FAFAF7;
+    --paper-warm: #F3F2ED;
+    --card: #FFFFFF;
+    --card-border: rgba(28, 30, 46, 0.08);
+    --amber-text: #9A7035;
+    --amber-soft: rgba(200, 150, 78, 0.12);
+    --pool-soft: rgba(59, 107, 158, 0.10);
+    --pool-hover: #2F5A87;
+    --sage-soft: rgba(74, 139, 111, 0.10);
+    --rose-soft: rgba(184, 92, 92, 0.10);
+    --bar-track: #E8E7E3;
+    --focus-ring: rgba(59, 107, 158, 0.4);
+    --shadow-sm: 0 1px 3px rgba(28,30,46,0.06);
+    --shadow-md: 0 4px 16px rgba(28,30,46,0.08);
+  }
+
+  /* ── Base ── */
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    transition: background var(--transition), color var(--transition);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Typography ── */
+  .display {
+    font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+    font-weight: normal;
+    letter-spacing: -0.01em;
+  }
+
+  .mono {
+    font-family: 'SF Mono', ui-monospace, 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.9em;
+  }
+
+  .label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--slate);
+  }
+
+  /* ── Layout ── */
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ── Header ── */
+  header {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--card-border);
+    position: sticky;
+    top: 0;
+    background: var(--paper);
+    z-index: 10;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .logo-mark {
+    width: 28px;
+    height: 28px;
+    background: var(--amber);
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    top: 4px;
+  }
+
+  .logo-mark svg { width: 16px; height: 16px; }
+
+  .logo h1 {
+    font-size: 1.25rem;
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .logo .version {
+    font-size: 0.7rem;
+    color: var(--slate-light);
+    font-weight: 400;
+    background: var(--paper-warm);
+    padding: 2px 7px;
+    border-radius: 4px;
+    position: relative;
+    top: -1px;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    color: var(--slate);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+  }
+
+  .btn-icon:hover { color: var(--ink); border-color: var(--slate-light); }
+  .btn-icon:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .btn-icon svg { width: 18px; height: 18px; }
+
+  /* ── Main Content Area ── */
+  main {
+    padding: 48px 0 80px;
+    min-height: calc(100vh - 80px);
+  }
+
+  /* ── State: Input ── */
+  .state { display: none; }
+  .state.active { display: block; }
+
+  .input-hero {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .input-hero h2 {
+    font-size: 2rem;
+    margin: 0 0 12px;
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  .input-hero p {
+    color: var(--slate);
+    font-size: 1.05rem;
+    margin: 0;
+    max-width: 480px;
+    margin-inline: auto;
+  }
+
+  .editor-wrap {
+    position: relative;
+    margin-bottom: 20px;
+  }
+
+  .editor {
+    width: 100%;
+    min-height: 200px;
+    max-height: 50vh;
+    padding: 20px;
+    border: 1.5px solid var(--card-border);
+    border-radius: var(--radius);
+    background: var(--card);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.65;
+    resize: vertical;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+
+  .editor::placeholder { color: var(--slate-light); }
+  .editor:focus {
+    outline: none;
+    border-color: var(--pool);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+  }
+
+  .editor-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .char-count {
+    font-size: 0.8rem;
+    color: var(--slate-light);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    background: var(--pool);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition), transform 0.1s;
+  }
+
+  .btn-primary:hover { background: var(--pool-hover); }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary svg { width: 18px; height: 18px; }
+
+  .examples-section {
+    margin-top: 48px;
+    text-align: center;
+  }
+
+  .examples-section .label { margin-bottom: 14px; display: block; }
+
+  .examples-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+  }
+
+  .example-card {
+    padding: 14px 16px;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    background: var(--card);
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    transition: all var(--transition);
+  }
+
+  .example-card:hover {
+    border-color: var(--pool);
+    color: var(--ink);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* ── State: Confirmation ── */
+  .confirm-card {
+    background: var(--card);
+    border: 1.5px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 36px;
+    box-shadow: var(--shadow-md);
+    max-width: 600px;
+    margin: 40px auto;
+  }
+
+  .confirm-card .label { margin-bottom: 16px; display: block; }
+
+  .confirm-card h3 {
+    font-size: 1.3rem;
+    margin: 0 0 8px;
+    line-height: 1.35;
+  }
+
+  .intent-summary {
+    color: var(--ink-soft);
+    font-size: 1.02rem;
+    line-height: 1.7;
+    margin: 0 0 28px;
+    padding: 16px 20px;
+    background: var(--paper-warm);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--amber);
+  }
+
+  .confirm-question {
+    font-weight: 500;
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+  }
+
+  .confirm-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn-confirm {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    border: 1.5px solid transparent;
+  }
+
+  .btn-yes {
+    background: var(--sage);
+    color: #fff;
+    border-color: var(--sage);
+  }
+  .btn-yes:hover { filter: brightness(1.08); }
+
+  .btn-no {
+    background: transparent;
+    color: var(--ink);
+    border-color: var(--card-border);
+  }
+  .btn-no:hover { border-color: var(--slate-light); background: var(--paper-warm); }
+
+  .btn-confirm:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+  /* ── State: Clarify ── */
+  .clarify-card {
+    background: var(--card);
+    border: 1.5px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 36px;
+    box-shadow: var(--shadow-md);
+    max-width: 600px;
+    margin: 40px auto;
+  }
+
+  .clarify-card h3 { font-size: 1.15rem; margin: 0 0 8px; }
+  .clarify-card p { color: var(--slate); margin: 0 0 20px; font-size: 0.95rem; }
+
+  .clarify-editor {
+    width: 100%;
+    min-height: 120px;
+    padding: 16px;
+    border: 1.5px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    background: var(--paper);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    resize: vertical;
+    margin-bottom: 16px;
+  }
+  .clarify-editor:focus {
+    outline: none;
+    border-color: var(--pool);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+  }
+
+  /* ── State: Loading ── */
+  .loading-state {
+    text-align: center;
+    padding: 80px 20px;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--bar-track);
+    border-top-color: var(--pool);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 20px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-state p {
+    color: var(--slate);
+    font-size: 0.95rem;
+  }
+
+  /* ── State: Results ── */
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .results-header h2 {
+    font-size: 1.5rem;
+    margin: 0;
+  }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border: 1.5px solid var(--card-border);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--ink);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .btn-secondary:hover { border-color: var(--slate-light); box-shadow: var(--shadow-sm); }
+  .btn-secondary:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .btn-secondary svg { width: 16px; height: 16px; }
+
+  /* ── Result Sections ── */
+  .result-section {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+
+  .section-header {
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--transition);
+  }
+
+  .section-header:hover { background: var(--paper-warm); }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .section-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .badge-amber { background: var(--amber-soft); color: var(--amber-text); }
+  .badge-pool { background: var(--pool-soft); color: var(--pool); }
+  .badge-sage { background: var(--sage-soft); color: var(--sage); }
+
+  .chevron {
+    width: 20px;
+    height: 20px;
+    color: var(--slate-light);
+    transition: transform 0.25s ease;
+    flex-shrink: 0;
+  }
+
+  .section-header[aria-expanded="true"] .chevron {
+    transform: rotate(180deg);
+  }
+
+  .section-body {
+    padding: 0 24px 24px;
+    display: none;
+  }
+
+  .section-body.open { display: block; }
+
+  /* ── Prompt Display ── */
+  .prompt-block {
+    padding: 18px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 0.92rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+    position: relative;
+  }
+
+  .prompt-original {
+    background: var(--paper-warm);
+    border: 1px solid var(--card-border);
+    color: var(--ink-soft);
+  }
+
+  .prompt-optimized {
+    background: var(--pool-soft);
+    border: 1px solid rgba(59, 107, 158, 0.15);
+    color: var(--ink);
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    color: var(--slate);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity var(--transition), color var(--transition);
+  }
+
+  .prompt-block:hover .copy-btn { opacity: 1; }
+  .copy-btn:hover { color: var(--ink); }
+  .copy-btn svg { width: 15px; height: 15px; }
+
+  /* ── Score ── */
+  .score-overview {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .score-ring {
+    width: 88px;
+    height: 88px;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .score-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .score-ring circle {
+    fill: none;
+    stroke-width: 6;
+    cx: 44;
+    cy: 44;
+    r: 38;
+  }
+  .ring-track { stroke: var(--bar-track); }
+  .ring-fill {
+    stroke: var(--amber);
+    stroke-linecap: round;
+    stroke-dasharray: 238.76;
+    transition: stroke-dashoffset 1s ease;
+  }
+
+  .score-number {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--amber-text);
+  }
+
+  .score-summary { flex: 1; min-width: 200px; }
+  .score-summary p { margin: 0; color: var(--slate); font-size: 0.92rem; line-height: 1.6; }
+
+  .score-bars {
+    display: grid;
+    gap: 10px;
+  }
+
+  .score-bar-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 36px;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.85rem;
+  }
+
+  .score-bar-label { color: var(--ink-soft); }
+  .score-bar-track {
+    height: 6px;
+    background: var(--bar-track);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.8s ease;
+  }
+
+  .score-bar-value {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    color: var(--slate);
+    font-size: 0.8rem;
+  }
+
+  /* ── Lists ── */
+  .improvement-list, .technique-list, .feedback-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .improvement-item {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--card-border);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+
+  .improvement-item:last-child { border-bottom: none; }
+
+  .improvement-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--sage-soft);
+    color: var(--sage);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .improvement-icon svg { width: 12px; height: 12px; }
+
+  /* ── Techniques ── */
+  .technique-item {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--card-border);
+  }
+
+  .technique-item:last-child { border-bottom: none; }
+
+  .technique-name {
+    font-weight: 600;
+    font-size: 0.92rem;
+    margin-bottom: 6px;
+    color: var(--ink);
+  }
+
+  .technique-detail {
+    font-size: 0.85rem;
+    color: var(--slate);
+    line-height: 1.6;
+    margin: 3px 0;
+  }
+
+  .technique-detail strong {
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+
+  /* ── Feedback ── */
+  .feedback-group {
+    margin-bottom: 20px;
+  }
+
+  .feedback-group:last-child { margin-bottom: 0; }
+
+  .feedback-group-title {
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .feedback-group-title .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-sage { background: var(--sage); }
+  .dot-amber { background: var(--amber); }
+  .dot-pool { background: var(--pool); }
+
+  .feedback-text {
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  .feedback-text + .feedback-text { margin-top: 8px; }
+
+  /* ── Remarks ── */
+  .remarks-block {
+    padding: 20px;
+    background: var(--amber-soft);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--amber);
+  }
+
+  .remarks-block p {
+    margin: 0;
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    line-height: 1.7;
+  }
+
+  .remarks-block p + p { margin-top: 10px; }
+
+  /* ── Footer ── */
+  footer {
+    padding: 24px 0;
+    border-top: 1px solid var(--card-border);
+    text-align: center;
+    color: var(--slate-light);
+    font-size: 0.78rem;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .container { padding: 0 16px; }
+    main { padding: 32px 0 60px; }
+    .input-hero h2 { font-size: 1.5rem; }
+    .input-hero p { font-size: 0.95rem; }
+    .editor { min-height: 160px; padding: 16px; }
+    .confirm-card, .clarify-card { padding: 24px; margin: 24px auto; }
+    .score-overview { flex-direction: column; align-items: flex-start; }
+    .score-bar-row { grid-template-columns: 90px 1fr 32px; gap: 8px; font-size: 0.8rem; }
+    .section-header { padding: 14px 18px; }
+    .section-body { padding: 0 18px 18px; }
+    .examples-grid { grid-template-columns: 1fr; }
+    .results-header { flex-direction: column; align-items: flex-start; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+
+<header>
+  <div class="container header-inner">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round">
+          <path d="M3 8h10M6 4l-3 4 3 4M10 4l3 4-3 4"/>
+        </svg>
+      </div>
+      <h1>Promptimizer</h1>
+      <span class="version">v1</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn-icon" id="themeToggle" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <!-- INPUT STATE -->
+  <div class="state active" id="stateInput">
+    <div class="input-hero">
+      <h2 class="display">Optimize your prompt.<br>Preserve your intent.</h2>
+      <p>Paste your prompt below and Promptimizer will help you communicate more effectively with AI.</p>
+    </div>
+
+    <div class="editor-wrap">
+      <textarea class="editor" id="promptEditor" placeholder="What are you trying to accomplish?&#10;&#10;Paste your prompt here — rough drafts, quick ideas, or detailed instructions all work."></textarea>
+    </div>
+
+    <div class="editor-footer">
+      <span class="char-count" id="charCount">0 characters</span>
+      <button class="btn-primary" id="btnAnalyze" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Promptimize
+      </button>
+    </div>
+
+    <div class="examples-section">
+      <span class="label">Try an example</span>
+      <div class="examples-grid">
+        <div class="example-card" data-example="Write me a blog post about AI">Write me a blog post about AI</div>
+        <div class="example-card" data-example="Help me create a marketing email for my product launch next week">Help me create a marketing email for my product launch next week</div>
+        <div class="example-card" data-example="I need a Python script that does web scraping">I need a Python script that does web scraping</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRMATION STATE -->
+  <div class="state" id="stateConfirm">
+    <div class="confirm-card">
+      <span class="label">Intent Confirmation</span>
+      <h3 class="display">Before I optimize your prompt&hellip;</h3>
+      <div class="intent-summary" id="intentSummary"></div>
+      <p class="confirm-question">Did I correctly understand your intended outcome?</p>
+      <div class="confirm-actions">
+        <button class="btn-confirm btn-yes" id="btnYes">Yes, that's right</button>
+        <button class="btn-confirm btn-no" id="btnNo">No, let me clarify</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLARIFY STATE -->
+  <div class="state" id="stateClarify">
+    <div class="clarify-card">
+      <span class="label">Additional Context Needed</span>
+      <h3 class="display">Help me understand better</h3>
+      <p>Please provide additional context so I can accurately understand your intended outcome before optimizing your prompt.</p>
+      <textarea class="clarify-editor" id="clarifyEditor" placeholder="Tell me more about what you're trying to achieve, who it's for, or what the result should look like&hellip;"></textarea>
+      <button class="btn-primary" id="btnClarifySubmit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        Continue
+      </button>
+    </div>
+  </div>
+
+  <!-- LOADING STATE -->
+  <div class="state" id="stateLoading">
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Analyzing and optimizing your prompt&hellip;</p>
+    </div>
+  </div>
+
+  <!-- RESULTS STATE -->
+  <div class="state" id="stateResults">
+    <div class="results-header">
+      <h2 class="display">Optimization Complete</h2>
+      <button class="btn-secondary" id="btnStartOver">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        Start Over
+      </button>
+    </div>
+
+    <!-- Original Prompt -->
+    <div class="result-section">
+      <div class="section-header" aria-expanded="true" data-section="original">
+        <span class="section-title">Original Prompt</span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body open" id="sectionOriginal">
+        <div class="prompt-block prompt-original" id="originalPrompt">
+          <button class="copy-btn" data-copy="original" aria-label="Copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Optimized Prompt -->
+    <div class="result-section">
+      <div class="section-header" aria-expanded="true" data-section="optimized">
+        <span class="section-title">Optimized Prompt <span class="section-badge badge-pool">Enhanced</span></span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body open" id="sectionOptimized">
+        <div class="prompt-block prompt-optimized" id="optimizedPrompt">
+          <button class="copy-btn" data-copy="optimized" aria-label="Copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quality Score -->
+    <div class="result-section">
+      <div class="section-header" aria-expanded="true" data-section="score">
+        <span class="section-title">Prompt Quality Score <span class="section-badge badge-amber" id="scoreBadge"></span></span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body open" id="sectionScore">
+        <div class="score-overview">
+          <div class="score-ring">
+            <svg viewBox="0 0 88 88">
+              <circle class="ring-track"/>
+              <circle class="ring-fill" id="scoreRing"/>
+            </svg>
+            <div class="score-number" id="scoreNumber">0</div>
+          </div>
+          <div class="score-summary" id="scoreSummary"></div>
+        </div>
+        <div class="score-bars" id="scoreBars"></div>
+      </div>
+    </div>
+
+    <!-- Improvements -->
+    <div class="result-section">
+      <div class="section-header" aria-expanded="false" data-section="improvements">
+        <span class="section-title">Improvements Made <span class="section-badge badge-sage" id="improvementCount"></span></span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body" id="sectionImprovements"></div>
+    </div>
+
+    <!-- Techniques -->
+    <div class="result-section">
+      <div class="section-header" aria-expanded="false" data-section="techniques">
+        <span class="section-title">Techniques Applied <span class="section-badge badge-pool" id="techniqueCount"></span></span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body" id="sectionTechniques"></div>
+    </div>
+
+    <!-- Feedback -->
+    <div class="result-section">
+      <div class="section-header" aria-expanded="false" data-section="feedback">
+        <span class="section-title">Prompting Feedback</span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body" id="sectionFeedback"></div>
+    </div>
+
+    <!-- Remarks -->
+    <div class="result-section">
+      <div class="section-header" aria-expanded="false" data-section="remarks">
+        <span class="section-title">Prompt Engineer Remarks</span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="section-body" id="sectionRemarks"></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="container">
+    Promptimizer v1 &mdash; Optimize the prompt. Preserve the intent.
+  </div>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── State Management ──
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => document.querySelectorAll(sel);
+
+  let currentPrompt = '';
+  let clarification = '';
+
+  // ── Theme Toggle ──
+  $('#themeToggle').addEventListener('click', () => {
+    const root = document.documentElement;
+    const current = root.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : (current === 'light' ? 'dark' : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'light' : 'dark'));
+    root.setAttribute('data-theme', next);
+  });
+
+  // ── State Transitions ──
+  function showState(id) {
+    $$('.state').forEach(s => s.classList.remove('active'));
+    $('#' + id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Editor ──
+  const editor = $('#promptEditor');
+  const charCount = $('#charCount');
+  const btnAnalyze = $('#btnAnalyze');
+
+  editor.addEventListener('input', () => {
+    const len = editor.value.trim().length;
+    charCount.textContent = `${len} character${len !== 1 ? 's' : ''}`;
+    btnAnalyze.disabled = len < 5;
+  });
+
+  // ── Examples ──
+  $$('.example-card').forEach(card => {
+    card.addEventListener('click', () => {
+      editor.value = card.dataset.example;
+      editor.dispatchEvent(new Event('input'));
+      editor.focus();
+    });
+  });
+
+  // ── Analyze ──
+  btnAnalyze.addEventListener('click', () => {
+    currentPrompt = editor.value.trim();
+    if (currentPrompt.length < 5) return;
+    const intent = generateIntent(currentPrompt);
+    $('#intentSummary').textContent = intent;
+    showState('stateConfirm');
+  });
+
+  // ── Confirmation ──
+  $('#btnYes').addEventListener('click', () => {
+    showState('stateLoading');
+    setTimeout(() => {
+      const results = generateResults(currentPrompt, clarification);
+      renderResults(results);
+      showState('stateResults');
+    }, 1400);
+  });
+
+  $('#btnNo').addEventListener('click', () => {
+    showState('stateClarify');
+    $('#clarifyEditor').focus();
+  });
+
+  // ── Clarify ──
+  $('#btnClarifySubmit').addEventListener('click', () => {
+    clarification = $('#clarifyEditor').value.trim();
+    const intent = generateIntent(currentPrompt, clarification);
+    $('#intentSummary').textContent = intent;
+    showState('stateConfirm');
+  });
+
+  // ── Start Over ──
+  $('#btnStartOver').addEventListener('click', () => {
+    editor.value = '';
+    clarification = '';
+    charCount.textContent = '0 characters';
+    btnAnalyze.disabled = true;
+    $('#clarifyEditor').value = '';
+    showState('stateInput');
+  });
+
+  // ── Accordion ──
+  $$('.section-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const expanded = header.getAttribute('aria-expanded') === 'true';
+      header.setAttribute('aria-expanded', !expanded);
+      const body = header.nextElementSibling;
+      body.classList.toggle('open', !expanded);
+    });
+  });
+
+  // ── Copy ──
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.copy-btn');
+    if (!btn) return;
+    const target = btn.dataset.copy;
+    const text = $('#' + target + 'Prompt').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      setTimeout(() => {
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+      }, 1500);
+    });
+  });
+
+  // ── Intent Generation ──
+  function generateIntent(prompt, extra) {
+    const p = prompt.toLowerCase();
+    const combined = extra ? `${prompt} ${extra}` : prompt;
+    const words = combined.split(/\s+/).length;
+
+    let goal = '';
+    if (p.includes('blog') || p.includes('article') || p.includes('post'))
+      goal = `create written content — specifically a ${p.includes('blog') ? 'blog post' : 'article'} — about the topic mentioned in your prompt`;
+    else if (p.includes('email') || p.includes('mail'))
+      goal = `draft an email that communicates effectively with its intended recipients`;
+    else if (p.includes('code') || p.includes('script') || p.includes('program') || p.includes('function') || p.includes('python') || p.includes('javascript'))
+      goal = `generate working code that accomplishes a specific technical task`;
+    else if (p.includes('market') || p.includes('advertis') || p.includes('campaign'))
+      goal = `develop marketing or promotional content for a specific product, service, or campaign`;
+    else if (p.includes('summar') || p.includes('explain') || p.includes('describe'))
+      goal = `produce a clear explanation or summary of a particular topic`;
+    else if (p.includes('help') || p.includes('assist') || p.includes('need'))
+      goal = `get targeted assistance with a specific task or challenge you're working on`;
+    else if (p.includes('create') || p.includes('make') || p.includes('build') || p.includes('design'))
+      goal = `create something new based on the requirements you've described`;
+    else if (p.includes('write') || p.includes('draft') || p.includes('compose'))
+      goal = `produce written content that matches the purpose and format you have in mind`;
+    else
+      goal = `accomplish the task described in your prompt and receive a useful, actionable response from AI`;
+
+    if (extra) {
+      return `Based on your prompt and the additional context you provided, I understand that your goal is to ${goal}. The extra detail you shared helps clarify the scope and direction of what you're looking for.`;
+    }
+    return `Based on your prompt, I understand that your goal is to ${goal}. You'd like AI to deliver a result that matches this objective effectively.`;
+  }
+
+  // ── Result Generation ──
+  function generateResults(prompt, extra) {
+    const p = prompt.toLowerCase();
+    const words = prompt.split(/\s+/).length;
+    const sentences = prompt.split(/[.!?]+/).filter(s => s.trim()).length;
+    const hasQuestion = p.includes('?');
+    const hasAudience = /\b(for|audience|reader|user|client|customer|beginner|expert|team)\b/.test(p);
+    const hasFormat = /\b(list|table|json|markdown|bullet|paragraph|steps|code|format)\b/.test(p);
+    const hasConstraint = /\b(don't|do not|avoid|must|should|limit|only|within|maximum|minimum|at least|no more)\b/.test(p);
+    const hasContext = words > 20;
+    const hasRole = /\b(as a|act as|you are|expert|specialist|professional)\b/.test(p);
+    const hasExample = /\b(for example|e\.g\.|such as|like this|for instance)\b/.test(p);
+    const hasSuccess = /\b(should be|must be|goal is|result should|outcome|deliverable)\b/.test(p);
+
+    // Scores
+    const clarity = Math.min(95, 30 + (sentences > 1 ? 15 : 0) + (words > 8 ? 15 : 0) + (!p.includes('stuff') && !p.includes('thing') ? 15 : 0) + (hasConstraint ? 10 : 0) + Math.floor(Math.random() * 10));
+    const context = Math.min(95, 15 + (hasContext ? 30 : 0) + (extra ? 20 : 0) + (words > 30 ? 15 : 0) + Math.floor(Math.random() * 15));
+    const specificity = Math.min(95, 20 + (words > 15 ? 15 : 0) + (hasConstraint ? 15 : 0) + (hasFormat ? 10 : 0) + (hasExample ? 15 : 0) + Math.floor(Math.random() * 15));
+    const constraints = Math.min(95, 10 + (hasConstraint ? 40 : 0) + (words > 25 ? 10 : 0) + Math.floor(Math.random() * 15));
+    const outputDef = Math.min(95, 10 + (hasFormat ? 40 : 0) + (hasSuccess ? 15 : 0) + Math.floor(Math.random() * 15));
+    const audience = Math.min(95, 10 + (hasAudience ? 45 : 0) + Math.floor(Math.random() * 10));
+    const structure = Math.min(95, 20 + (sentences > 2 ? 20 : 0) + (words > 20 ? 10 : 0) + (p.includes('\n') ? 15 : 0) + Math.floor(Math.random() * 15));
+    const successCrit = Math.min(95, 10 + (hasSuccess ? 35 : 0) + (hasFormat ? 10 : 0) + Math.floor(Math.random() * 15));
+
+    const totalScore = Math.round((clarity + context + specificity + constraints + outputDef + audience + structure + successCrit) / 8);
+
+    const scores = { clarity, context, specificity, constraints, 'output definition': outputDef, audience, structure, 'success criteria': successCrit };
+
+    // Optimized prompt
+    const optimized = buildOptimizedPrompt(prompt, { hasRole, hasAudience, hasFormat, hasConstraint, hasContext, hasSuccess, hasExample, p });
+
+    // Improvements
+    const improvements = [];
+    if (!hasRole) improvements.push('Added role prompting to leverage domain-specific expertise');
+    if (!hasAudience) improvements.push('Defined the target audience for appropriate tone and complexity');
+    if (!hasFormat) improvements.push('Specified output format for a structured, usable response');
+    if (!hasConstraint) improvements.push('Introduced constraints to focus the scope and reduce irrelevant output');
+    if (!hasContext) improvements.push('Expanded context to provide AI with necessary background information');
+    if (!hasSuccess) improvements.push('Defined success criteria so the response quality can be evaluated');
+    improvements.push('Improved structural organization for logical flow');
+    if (words < 15) improvements.push('Increased specificity by replacing vague terms with concrete details');
+    if (!hasExample) improvements.push('Enhanced precision of instructions to reduce ambiguity');
+
+    // Techniques
+    const techniques = [];
+    if (!hasRole) techniques.push({ name: 'Role Prompting', what: 'Assigns a specific expert persona to the AI.', why: 'Your prompt didn\'t specify what kind of expertise to draw on, which can lead to generic responses.', how: 'Focusing the AI on a specific domain produces more accurate, nuanced, and professional results.' });
+    techniques.push({ name: 'Intent Preservation', what: 'Ensures the user\'s original goal survives all modifications.', why: 'Your core objective was maintained while everything around it was improved.', how: 'The AI delivers exactly what you intended rather than drifting toward a different interpretation.' });
+    if (!hasContext) techniques.push({ name: 'Context Injection', what: 'Adds relevant background information to the prompt.', why: 'Your original prompt left the AI to guess at important details.', how: 'Richer context reduces hallucination and produces responses grounded in the right situation.' });
+    if (!hasConstraint) techniques.push({ name: 'Constraints and Boundaries', what: 'Defines what the AI should and should not include.', why: 'Without boundaries, AI responses can be too broad or include unwanted content.', how: 'Constraints keep the response focused, relevant, and within the scope you actually need.' });
+    if (!hasFormat) techniques.push({ name: 'Output Formatting', what: 'Specifies the structure and format of the desired response.', why: 'Your prompt didn\'t indicate how the response should be organized.', how: 'Defined formatting produces responses you can use immediately without reformatting.' });
+    if (!hasSuccess) techniques.push({ name: 'Success Criteria', what: 'Describes what a high-quality response looks like.', why: 'Without criteria, the AI has no standard to aim for.', how: 'Clear targets help the AI self-evaluate and deliver higher-quality results on the first attempt.' });
+    if (!hasAudience) techniques.push({ name: 'Audience Definition', what: 'Identifies who the response is intended for.', why: 'Your prompt didn\'t specify the intended reader or user.', how: 'Audience awareness adjusts vocabulary, depth, and tone to match who will actually read the output.' });
+    techniques.push({ name: 'Specificity and Precision', what: 'Replaces vague language with concrete, actionable terms.', why: 'Precise instructions eliminate the guesswork that leads to off-target responses.', how: 'The AI knows exactly what to produce, reducing the back-and-forth needed to get a good result.' });
+
+    // Feedback
+    const strengths = [];
+    if (hasContext) strengths.push('You provided meaningful context, which helps AI understand the situation behind your request.');
+    if (hasConstraint) strengths.push('You included constraints, which is a strong prompt engineering habit that keeps responses focused.');
+    if (hasAudience) strengths.push('You specified your audience, which helps AI calibrate tone and complexity appropriately.');
+    if (hasFormat) strengths.push('You mentioned the desired format, which leads to more immediately usable responses.');
+    if (hasRole) strengths.push('You assigned a role, which is an effective technique for drawing on specialized knowledge.');
+    if (strengths.length === 0) strengths.push('You communicated a clear core idea — the AI can understand what you\'re looking for, even if the details need refinement.');
+
+    const opportunities = [];
+    if (!hasContext) opportunities.push('Adding background context helps AI make better decisions about what to include and how to approach the task.');
+    if (!hasConstraint) opportunities.push('Defining boundaries (what to avoid, length limits, scope) prevents AI from going off-track.');
+    if (!hasFormat) opportunities.push('Specifying the output format (bullet points, paragraphs, table, code) saves you from reformatting later.');
+    if (!hasAudience) opportunities.push('Identifying your audience lets AI adjust complexity and tone — a response for a beginner reads very differently than one for an expert.');
+    if (!hasSuccess) opportunities.push('Describing what a good response looks like gives AI a clear target and helps you evaluate the result.');
+
+    const suggestions = [
+      'Start prompts with the most important instruction — AI weights the beginning of a prompt more heavily.',
+      'When the task is complex, break it into numbered steps. AI handles sequential instructions more reliably than a single dense paragraph.',
+      'If you have a specific format in mind, include a brief example in your prompt. One example often communicates more than several sentences of description.'
+    ];
+
+    // Remarks
+    const remarks = [
+      `The optimized prompt preserves your original goal while adding the structural and contextual elements that help AI systems process requests more accurately. The most impactful change was ${!hasRole ? 'adding role prompting to focus the AI\'s expertise' : !hasContext ? 'expanding the context so the AI has enough background to respond intelligently' : !hasFormat ? 'specifying the output format so you get a usable result on the first try' : 'improving the overall clarity and structure of your instructions'}.`,
+      `These refinements don't change what you're asking for — they change how clearly you're asking for it. AI models respond best to structured, specific, well-bounded instructions, and the optimized version communicates your intent in the format that AI systems are designed to handle most effectively.`
+    ];
+
+    return { optimized, scores, totalScore, improvements, techniques, strengths, opportunities, suggestions, remarks };
+  }
+
+  function buildOptimizedPrompt(prompt, flags) {
+    const parts = [];
+    const p = flags.p;
+
+    // Role
+    if (!flags.hasRole) {
+      if (p.includes('blog') || p.includes('article') || p.includes('write') || p.includes('post'))
+        parts.push('You are an experienced content writer and editor with expertise in creating engaging, well-structured written content.');
+      else if (p.includes('code') || p.includes('script') || p.includes('program') || p.includes('python') || p.includes('javascript'))
+        parts.push('You are a senior software engineer with strong experience in writing clean, well-documented, production-quality code.');
+      else if (p.includes('email') || p.includes('market'))
+        parts.push('You are a skilled marketing and communications specialist with experience crafting compelling, audience-targeted messaging.');
+      else
+        parts.push('You are a knowledgeable and thoughtful assistant with expertise relevant to the task described below.');
+    }
+
+    // Context
+    if (!flags.hasContext) {
+      parts.push('');
+      parts.push('## Context');
+      if (p.includes('blog') || p.includes('article'))
+        parts.push('I need a well-researched piece of content that provides genuine value to the reader. The content should be original, informative, and structured for online readability.');
+      else if (p.includes('email'))
+        parts.push('I\'m preparing professional communication that needs to be clear, persuasive, and appropriate for the intended recipients. The tone should match the relationship and purpose.');
+      else if (p.includes('code') || p.includes('script'))
+        parts.push('I\'m working on a project that requires reliable, maintainable code. The solution should follow current best practices and include appropriate error handling.');
+      else
+        parts.push('I\'m looking for a thorough, well-considered response that I can act on directly. Quality and accuracy matter more than speed.');
+    }
+
+    // Task
+    parts.push('');
+    parts.push('## Task');
+    parts.push(prompt);
+
+    // Audience
+    if (!flags.hasAudience) {
+      parts.push('');
+      parts.push('## Audience');
+      if (p.includes('blog') || p.includes('article'))
+        parts.push('General readers with moderate familiarity with the topic. Write accessibly without oversimplifying.');
+      else if (p.includes('code') || p.includes('script'))
+        parts.push('A developer who can read and modify the code but would benefit from clear variable names and brief inline comments at non-obvious points.');
+      else
+        parts.push('Assume the reader has general knowledge but is not a deep specialist. Be clear and direct without being condescending.');
+    }
+
+    // Format
+    if (!flags.hasFormat) {
+      parts.push('');
+      parts.push('## Output Format');
+      if (p.includes('blog') || p.includes('article'))
+        parts.push('Use a clear heading structure (H2, H3). Open with a hook, develop with supporting points, and close with a takeaway. Aim for 800–1200 words unless otherwise specified.');
+      else if (p.includes('code') || p.includes('script'))
+        parts.push('Provide the complete, runnable code. Include a brief explanation of the approach above the code block. Use clear variable and function names.');
+      else if (p.includes('email'))
+        parts.push('Use a professional email format with a clear subject line suggestion, greeting, body, and sign-off. Keep it concise.');
+      else if (p.includes('list') || p.includes('steps') || p.includes('ideas'))
+        parts.push('Use a numbered or bulleted list with brief explanations for each item. Prioritize actionable, specific entries over generic ones.');
+      else
+        parts.push('Organize the response with clear sections if the content warrants it. Use paragraphs for narrative content and lists for sequential or comparative information.');
+    }
+
+    // Constraints
+    if (!flags.hasConstraint) {
+      parts.push('');
+      parts.push('## Constraints');
+      parts.push('- Stay focused on the specific task described above');
+      parts.push('- Do not include unnecessary preamble or filler content');
+      parts.push('- If you need to make assumptions, state them briefly');
+      if (p.includes('code') || p.includes('script'))
+        parts.push('- Follow current language idioms and best practices\n- Include error handling for likely failure points');
+      if (p.includes('blog') || p.includes('article') || p.includes('write'))
+        parts.push('- Use an active, engaging voice\n- Avoid clichés and generic filler phrases');
+    }
+
+    // Success criteria
+    if (!flags.hasSuccess) {
+      parts.push('');
+      parts.push('## Success Criteria');
+      parts.push('A successful response will:');
+      if (p.includes('code') || p.includes('script'))
+        parts.push('- Run correctly without modification\n- Be readable and maintainable\n- Handle edge cases appropriately');
+      else if (p.includes('blog') || p.includes('article'))
+        parts.push('- Engage the reader from the opening line\n- Provide concrete, actionable insights\n- Be structured for easy scanning');
+      else if (p.includes('email'))
+        parts.push('- Communicate the key message within the first two sentences\n- Be professional and appropriately toned\n- Include a clear call to action');
+      else
+        parts.push('- Directly address the task without tangents\n- Provide specific, actionable information\n- Be organized for quick comprehension');
+    }
+
+    return parts.join('\n');
+  }
+
+  // ── Render Results ──
+  function renderResults(r) {
+    // Original
+    const origEl = $('#originalPrompt');
+    origEl.childNodes.forEach(n => { if (n.nodeType === 3) n.remove(); });
+    origEl.insertBefore(document.createTextNode(currentPrompt), origEl.firstChild);
+
+    // Optimized
+    const optEl = $('#optimizedPrompt');
+    optEl.childNodes.forEach(n => { if (n.nodeType === 3) n.remove(); });
+    optEl.insertBefore(document.createTextNode(r.optimized), optEl.firstChild);
+
+    // Score
+    const offset = 238.76 - (238.76 * r.totalScore / 100);
+    $('#scoreRing').style.strokeDashoffset = 238.76;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => { $('#scoreRing').style.strokeDashoffset = offset; });
+    });
+    $('#scoreNumber').textContent = r.totalScore;
+    $('#scoreBadge').textContent = `${r.totalScore}/100`;
+
+    const summaryText = r.totalScore >= 70
+      ? 'Your prompt covers the essentials well. The optimizations add structure and specificity to help AI deliver a more targeted response.'
+      : r.totalScore >= 40
+      ? 'Your prompt communicates the core idea, but several Prompt Engineering elements would strengthen it significantly.'
+      : 'Your prompt has a clear goal, but it\'s missing most of the elements that help AI produce accurate, focused responses. The optimization adds these fundamentals.';
+    $('#scoreSummary').innerHTML = `<p>${summaryText}</p>`;
+
+    const barsHtml = Object.entries(r.scores).map(([label, val]) => {
+      const color = val >= 65 ? 'var(--sage)' : val >= 35 ? 'var(--amber)' : 'var(--rose)';
+      return `<div class="score-bar-row">
+        <span class="score-bar-label">${label.charAt(0).toUpperCase() + label.slice(1)}</span>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:${val}%;background:${color}"></div></div>
+        <span class="score-bar-value">${val}</span>
+      </div>`;
+    }).join('');
+    $('#scoreBars').innerHTML = barsHtml;
+
+    // Improvements
+    $('#improvementCount').textContent = `${r.improvements.length} changes`;
+    const impHtml = '<ul class="improvement-list">' + r.improvements.map(imp =>
+      `<li class="improvement-item"><span class="improvement-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></span>${imp}</li>`
+    ).join('') + '</ul>';
+    $('#sectionImprovements').innerHTML = impHtml;
+
+    // Techniques
+    $('#techniqueCount').textContent = `${r.techniques.length} techniques`;
+    const techHtml = '<ul class="technique-list">' + r.techniques.map(t =>
+      `<li class="technique-item">
+        <div class="technique-name">${t.name}</div>
+        <p class="technique-detail"><strong>What:</strong> ${t.what}</p>
+        <p class="technique-detail"><strong>Why:</strong> ${t.why}</p>
+        <p class="technique-detail"><strong>How it helps:</strong> ${t.how}</p>
+      </li>`
+    ).join('') + '</ul>';
+    $('#sectionTechniques').innerHTML = techHtml;
+
+    // Feedback
+    let fbHtml = '';
+    fbHtml += '<div class="feedback-group"><div class="feedback-group-title"><span class="dot dot-sage"></span> What Worked Well</div>';
+    r.strengths.forEach(s => { fbHtml += `<p class="feedback-text">${s}</p>`; });
+    fbHtml += '</div>';
+    fbHtml += '<div class="feedback-group"><div class="feedback-group-title"><span class="dot dot-amber"></span> Opportunities for Improvement</div>';
+    r.opportunities.forEach(o => { fbHtml += `<p class="feedback-text">${o}</p>`; });
+    fbHtml += '</div>';
+    fbHtml += '<div class="feedback-group"><div class="feedback-group-title"><span class="dot dot-pool"></span> Suggestions for Next Time</div>';
+    r.suggestions.forEach(s => { fbHtml += `<p class="feedback-text">${s}</p>`; });
+    fbHtml += '</div>';
+    $('#sectionFeedback').innerHTML = fbHtml;
+
+    // Remarks
+    const remHtml = '<div class="remarks-block">' + r.remarks.map(rm => `<p>${rm}</p>`).join('') + '</div>';
+    $('#sectionRemarks').innerHTML = remHtml;
+  }
+
+})();
+</script>
