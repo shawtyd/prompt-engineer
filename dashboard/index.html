@@ -798,6 +798,196 @@
 
   .remarks-block p + p { margin-top: 10px; }
 
+  /* ── Health Report ── */
+  .health-card {
+    background: var(--card);
+    border: 1.5px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 36px;
+    box-shadow: var(--shadow-md);
+    max-width: 640px;
+    margin: 40px auto;
+  }
+
+  .health-card .label { margin-bottom: 16px; display: block; }
+
+  .health-card h3 {
+    font-size: 1.3rem;
+    margin: 0 0 24px;
+    line-height: 1.35;
+  }
+
+  .health-score-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .health-ring {
+    width: 72px;
+    height: 72px;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .health-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .health-ring circle {
+    fill: none;
+    stroke-width: 5;
+    cx: 36;
+    cy: 36;
+    r: 30;
+  }
+
+  .health-ring .ring-track { stroke: var(--bar-track); }
+  .health-ring .ring-fill {
+    stroke: var(--amber);
+    stroke-linecap: round;
+    stroke-dasharray: 188.5;
+    transition: stroke-dashoffset 0.8s ease;
+  }
+
+  .health-score-num {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--amber-text);
+  }
+
+  .health-score-label {
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .health-score-label .label { margin-bottom: 4px; }
+  .health-score-label p { margin: 0; color: var(--slate); font-size: 0.9rem; line-height: 1.5; }
+
+  .health-bars {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .health-bar-row {
+    display: grid;
+    grid-template-columns: 130px 1fr 32px;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.82rem;
+  }
+
+  .health-bar-label { color: var(--ink-soft); }
+  .health-bar-track {
+    height: 5px;
+    background: var(--bar-track);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .health-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+  }
+  .health-bar-value {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    color: var(--slate);
+    font-size: 0.78rem;
+  }
+
+  .health-section {
+    margin-bottom: 18px;
+  }
+
+  .health-section:last-child { margin-bottom: 0; }
+
+  .health-section-title {
+    font-weight: 600;
+    font-size: 0.82rem;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .health-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    padding: 5px 0;
+  }
+
+  .health-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+    font-size: 0.85rem;
+  }
+
+  .health-issue-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--amber-soft);
+    color: var(--amber-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .health-strength-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--sage-soft);
+    color: var(--sage);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .health-strength-icon svg { width: 11px; height: 11px; }
+
+  .health-suggestion-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--pool-soft);
+    color: var(--pool);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    font-size: 0.75rem;
+  }
+
+  .health-divider {
+    height: 1px;
+    background: var(--card-border);
+    margin: 20px 0;
+  }
+
+  .health-continue {
+    margin-top: 24px;
+  }
+
   /* ── Footer ── */
   footer {
     padding: 24px 0;
@@ -814,7 +1004,7 @@
     .input-hero h2 { font-size: 1.5rem; }
     .input-hero p { font-size: 0.95rem; }
     .editor { min-height: 160px; padding: 16px; }
-    .confirm-card, .clarify-card { padding: 24px; margin: 24px auto; }
+    .confirm-card, .clarify-card, .health-card { padding: 24px; margin: 24px auto; }
     .score-overview { flex-direction: column; align-items: flex-start; }
     .score-bar-row { grid-template-columns: 90px 1fr 32px; gap: 8px; font-size: 0.8rem; }
     .section-header { padding: 14px 18px; }
@@ -840,7 +1030,7 @@
         </svg>
       </div>
       <h1>Promptimizer</h1>
-      <span class="version">v1</span>
+      <span class="version">v2</span>
     </div>
     <div class="header-actions">
       <button class="btn-icon" id="themeToggle" aria-label="Toggle theme">
@@ -879,6 +1069,43 @@
         <div class="example-card" data-example="Write me a blog post about AI">Write me a blog post about AI</div>
         <div class="example-card" data-example="Help me create a marketing email for my product launch next week">Help me create a marketing email for my product launch next week</div>
         <div class="example-card" data-example="I need a Python script that does web scraping">I need a Python script that does web scraping</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEALTH REPORT STATE -->
+  <div class="state" id="stateHealth">
+    <div class="health-card">
+      <span class="label">Prompt Validation</span>
+      <h3 class="display">Prompt Health Report</h3>
+
+      <div class="health-score-header">
+        <div class="health-ring">
+          <svg viewBox="0 0 72 72">
+            <circle class="ring-track"/>
+            <circle class="ring-fill" id="healthRing"/>
+          </svg>
+          <div class="health-score-num" id="healthScoreNum">0</div>
+        </div>
+        <div class="health-score-label">
+          <span class="label">Overall Health Score</span>
+          <p id="healthSummaryText"></p>
+        </div>
+      </div>
+
+      <div class="health-bars" id="healthBars"></div>
+
+      <div class="health-divider"></div>
+
+      <div id="healthStrengths" class="health-section"></div>
+      <div id="healthIssues" class="health-section"></div>
+      <div id="healthSuggestions" class="health-section"></div>
+
+      <div class="health-continue">
+        <button class="btn-primary" id="btnHealthContinue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          Continue to Intent Confirmation
+        </button>
       </div>
     </div>
   </div>
@@ -1016,7 +1243,7 @@
 
 <footer>
   <div class="container">
-    Promptimizer v1 &mdash; Optimize the prompt. Preserve the intent.
+    Promptimizer v2 &mdash; Optimize the prompt. Preserve the intent.
   </div>
 </footer>
 
@@ -1070,7 +1297,14 @@
   btnAnalyze.addEventListener('click', () => {
     currentPrompt = editor.value.trim();
     if (currentPrompt.length < 5) return;
-    const intent = generateIntent(currentPrompt);
+    const health = generateHealthReport(currentPrompt);
+    renderHealthReport(health);
+    showState('stateHealth');
+  });
+
+  // ── Health Report Continue ──
+  $('#btnHealthContinue').addEventListener('click', () => {
+    const intent = generateIntent(currentPrompt, clarification);
     $('#intentSummary').textContent = intent;
     showState('stateConfirm');
   });
@@ -1131,6 +1365,179 @@
       }, 1500);
     });
   });
+
+  // ── Health Report Generation ──
+  function generateHealthReport(prompt) {
+    const p = prompt.toLowerCase();
+    const words = prompt.split(/\s+/).length;
+    const sentences = prompt.split(/[.!?]+/).filter(s => s.trim()).length;
+    const hasRole = /\b(as a|act as|you are|expert|specialist|professional)\b/.test(p);
+    const hasAudience = /\b(for|audience|reader|user|client|customer|beginner|expert|team)\b/.test(p);
+    const hasFormat = /\b(list|table|json|markdown|bullet|paragraph|steps|code|format)\b/.test(p);
+    const hasConstraint = /\b(don't|do not|avoid|must|should|limit|only|within|maximum|minimum|at least|no more)\b/.test(p);
+    const hasContext = words > 20;
+    const hasSuccess = /\b(should be|must be|goal is|result should|outcome|deliverable)\b/.test(p);
+
+    // Detect contradictions
+    const contradictions = [];
+    if (/\bbrief\b/.test(p) && /\b(detail|extensive|thorough|comprehensive|in-depth)\b/.test(p))
+      contradictions.push({ a: 'Keep it brief', b: 'Provide extensive detail', fix: 'Clarify whether you want a concise summary or a comprehensive deep-dive. These produce very different AI responses.' });
+    if (/\bprofessional\b/.test(p) && /\b(humor|funny|joke|casual|playful)\b/.test(p))
+      contradictions.push({ a: 'Professional tone', b: 'Use humor', fix: 'Decide on the primary tone. You can be professional with light touches of wit, but stating both as requirements pulls the AI in opposite directions.' });
+    if (/\bno (list|bullet)/.test(p) && /\b(checklist|bullet|numbered list)\b/.test(p))
+      contradictions.push({ a: 'Avoid lists', b: 'Create a list-based output', fix: 'Choose one format. If you want structured content without bullet points, consider a table or narrative with clear headings.' });
+    if (/\bshort\b/.test(p) && /\b(everything|all|complete|full|exhaustive)\b/.test(p))
+      contradictions.push({ a: 'Keep it short', b: 'Cover everything', fix: 'Define scope — either limit the topic to keep the response short, or allow length to cover the topic fully.' });
+
+    // Detect role mismatch
+    let roleMismatch = null;
+    if (hasRole) {
+      const roleMatch = p.match(/(?:as a|act as|you are)(?: an?)? ([a-z\s]+?)(?:\.|,|who|with|and|\n|$)/);
+      const roleText = roleMatch ? roleMatch[1].trim() : '';
+      if (roleText) {
+        const techTasks = /\b(architect|code|api|database|deploy|devops|infrastructure|backend|frontend|software|algorithm)\b/.test(p);
+        const marketRoles = /\b(market|sales|brand|advertis|content writer|copywriter|seo)\b/.test(roleText);
+        const techRoles = /\b(engineer|developer|architect|programmer|devops|data scientist)\b/.test(roleText);
+        const marketTasks = /\b(market|campaign|brand|advertis|social media|content|copywrite|seo|email blast)\b/.test(p);
+
+        if (marketRoles && techTasks)
+          roleMismatch = { role: roleText, task: 'a technical/engineering task', suggestion: 'Consider assigning a technical role (e.g., software architect, senior engineer) that matches the domain of your task.' };
+        else if (techRoles && marketTasks && !techTasks)
+          roleMismatch = { role: roleText, task: 'a marketing/content task', suggestion: 'Consider assigning a marketing or communications role that better matches the creative nature of your task.' };
+      }
+    }
+
+    // Detect format mismatch
+    let formatMismatch = null;
+    const wantsProposal = /\b(proposal|business plan|strategy document|whitepaper|report)\b/.test(p);
+    const wantsEmail = /\b(email|mail)\b/.test(p) && /\bformat\b/.test(p);
+    if (wantsProposal && wantsEmail)
+      formatMismatch = { task: 'a detailed document (proposal/report)', format: 'email format', suggestion: 'An email format is typically too brief and informal for a proposal. Consider requesting a structured document with sections, headers, and supporting detail.' };
+
+    // Ambiguity detection
+    const ambiguities = [];
+    if (/\b(good|nice|better|great|quality|improve)\b/.test(p) && !hasSuccess)
+      ambiguities.push('Terms like "good" or "better" are subjective — AI may interpret them differently than you intend. Try defining what success looks like in concrete terms.');
+    if (/\b(some|a few|several|various|many|multiple)\b/.test(p))
+      ambiguities.push('Vague quantities ("some," "a few," "several") leave the AI guessing. Specifying a number produces more predictable results.');
+    if (/\b(etc|and so on|and more|stuff like that)\b/.test(p))
+      ambiguities.push('Open-ended phrases like "etc." or "and so on" leave scope undefined. List the specific items you want covered, or define boundaries.');
+
+    // Scores
+    const intentClarity = Math.min(95, 25 + (sentences > 1 ? 15 : 0) + (words > 8 ? 15 : 0) + (!p.includes('stuff') && !p.includes('thing') ? 15 : 0) + (contradictions.length === 0 ? 15 : 0) + Math.floor(Math.random() * 8));
+    const context = Math.min(95, 15 + (hasContext ? 30 : 0) + (words > 30 ? 15 : 0) + Math.floor(Math.random() * 12));
+    const roleAlignment = Math.min(95, hasRole ? (roleMismatch ? 35 : 85 + Math.floor(Math.random() * 10)) : 15 + Math.floor(Math.random() * 10));
+    const objConsistency = Math.min(95, 50 + (contradictions.length === 0 ? 35 : -contradictions.length * 15) + Math.floor(Math.random() * 10));
+    const outputFormat = Math.min(95, 10 + (hasFormat ? (formatMismatch ? 30 : 45) : 0) + (hasSuccess ? 15 : 0) + Math.floor(Math.random() * 12));
+    const constraints = Math.min(95, 10 + (hasConstraint ? 40 : 0) + (words > 25 ? 10 : 0) + Math.floor(Math.random() * 12));
+    const specificity = Math.min(95, 20 + (words > 15 ? 15 : 0) + (ambiguities.length === 0 ? 20 : 0) + (hasConstraint ? 10 : 0) + Math.floor(Math.random() * 12));
+    const structure = Math.min(95, 20 + (sentences > 2 ? 20 : 0) + (words > 20 ? 10 : 0) + (p.includes('\n') ? 15 : 0) + Math.floor(Math.random() * 12));
+    const completeness = Math.min(95, 10 + (hasRole ? 10 : 0) + (hasAudience ? 10 : 0) + (hasFormat ? 10 : 0) + (hasConstraint ? 10 : 0) + (hasContext ? 10 : 0) + (hasSuccess ? 10 : 0) + Math.floor(Math.random() * 10));
+
+    const scores = {
+      'Intent Clarity': intentClarity,
+      'Context': context,
+      'Role Alignment': roleAlignment,
+      'Obj. Consistency': objConsistency,
+      'Output Format': outputFormat,
+      'Constraints': constraints,
+      'Specificity': specificity,
+      'Structure': structure,
+      'Completeness': completeness
+    };
+
+    const totalScore = Math.round(Object.values(scores).reduce((a, b) => a + b, 0) / 9);
+
+    // Strengths
+    const strengths = [];
+    if (intentClarity >= 60) strengths.push('Your core intent is clear — AI can identify what you\'re asking for.');
+    if (hasContext) strengths.push('You provided meaningful background context.');
+    if (hasConstraint) strengths.push('You defined constraints, which keeps AI responses focused.');
+    if (hasAudience) strengths.push('You identified your target audience.');
+    if (hasRole && !roleMismatch) strengths.push('Your assigned role aligns well with the task.');
+    if (contradictions.length === 0 && sentences > 1) strengths.push('Your instructions are internally consistent.');
+    if (strengths.length === 0) strengths.push('You have a clear starting idea that can be built upon.');
+
+    // Issues
+    const issues = [];
+    if (roleMismatch) issues.push({ type: 'Role Mismatch', detail: `The assigned role ("${roleMismatch.role}") may not be ideal for ${roleMismatch.task}. ${roleMismatch.suggestion}` });
+    if (formatMismatch) issues.push({ type: 'Output Format Conflict', detail: `You\'re requesting ${formatMismatch.task} but in ${formatMismatch.format}. ${formatMismatch.suggestion}` });
+    contradictions.forEach(c => { issues.push({ type: 'Contradiction', detail: `"${c.a}" conflicts with "${c.b}." ${c.fix}` }); });
+    ambiguities.forEach(a => { issues.push({ type: 'Ambiguity', detail: a }); });
+    if (!hasContext && words <= 20) issues.push({ type: 'Missing Context', detail: 'Your prompt lacks background information. Adding context about your situation, audience, or goals helps AI produce more relevant responses.' });
+    if (!hasAudience) issues.push({ type: 'Missing Audience', detail: 'No target audience is specified. Identifying who the response is for helps AI calibrate tone and complexity.' });
+
+    // Suggestions
+    const suggestions = [];
+    if (roleMismatch) suggestions.push(roleMismatch.suggestion);
+    if (formatMismatch) suggestions.push(formatMismatch.suggestion);
+    if (contradictions.length > 0) suggestions.push('Resolve contradicting instructions so the AI receives a single clear direction.');
+    if (ambiguities.length > 0) suggestions.push('Replace vague terms with specific quantities, criteria, or examples.');
+    if (!hasContext && words <= 20) suggestions.push('Add 1–2 sentences of context describing your situation or goal.');
+    if (!hasConstraint) suggestions.push('Define what the AI should avoid or limit to keep the response focused.');
+    if (!hasSuccess) suggestions.push('Describe what a successful response looks like so AI has a clear target.');
+
+    return { scores, totalScore, strengths, issues, suggestions };
+  }
+
+  function renderHealthReport(h) {
+    // Score ring
+    const circumference = 188.5;
+    const offset = circumference - (circumference * h.totalScore / 100);
+    const ring = $('#healthRing');
+    ring.style.strokeDashoffset = circumference;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => { ring.style.strokeDashoffset = offset; });
+    });
+    $('#healthScoreNum').textContent = h.totalScore;
+
+    const summaryText = h.totalScore >= 75
+      ? 'Your prompt is in good shape. A few refinements could make it even stronger.'
+      : h.totalScore >= 45
+      ? 'Your prompt has a solid foundation but some issues may affect AI interpretation.'
+      : 'Several issues detected that could lead to unexpected AI responses. Review the suggestions below.';
+    $('#healthSummaryText').textContent = summaryText;
+
+    // Bars
+    const barsHtml = Object.entries(h.scores).map(([label, val]) => {
+      const color = val >= 65 ? 'var(--sage)' : val >= 35 ? 'var(--amber)' : 'var(--rose)';
+      return `<div class="health-bar-row">
+        <span class="health-bar-label">${label}</span>
+        <div class="health-bar-track"><div class="health-bar-fill" style="width:${val}%;background:${color}"></div></div>
+        <span class="health-bar-value">${val}</span>
+      </div>`;
+    }).join('');
+    $('#healthBars').innerHTML = barsHtml;
+
+    // Strengths
+    let sHtml = '<div class="health-section-title"><span class="dot dot-sage"></span> Strengths</div>';
+    h.strengths.forEach(s => {
+      sHtml += `<div class="health-item"><span class="health-strength-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></span><span>${s}</span></div>`;
+    });
+    $('#healthStrengths').innerHTML = sHtml;
+
+    // Issues
+    if (h.issues.length > 0) {
+      let iHtml = '<div class="health-section-title"><span class="dot dot-amber"></span> Issues Detected</div>';
+      h.issues.forEach(issue => {
+        iHtml += `<div class="health-item"><span class="health-issue-icon">!</span><span><strong>${issue.type}:</strong> ${issue.detail}</span></div>`;
+      });
+      $('#healthIssues').innerHTML = iHtml;
+    } else {
+      $('#healthIssues').innerHTML = '<div class="health-section-title"><span class="dot dot-amber"></span> Issues Detected</div><div class="health-item" style="color:var(--sage)">No issues detected. Your prompt is internally consistent.</div>';
+    }
+
+    // Suggestions
+    if (h.suggestions.length > 0) {
+      let sgHtml = '<div class="health-section-title"><span class="dot dot-pool"></span> Suggestions</div>';
+      h.suggestions.forEach(s => {
+        sgHtml += `<div class="health-item"><span class="health-suggestion-icon">&rarr;</span><span>${s}</span></div>`;
+      });
+      $('#healthSuggestions').innerHTML = sgHtml;
+    } else {
+      $('#healthSuggestions').innerHTML = '';
+    }
+  }
 
   // ── Intent Generation ──
   function generateIntent(prompt, extra) {
