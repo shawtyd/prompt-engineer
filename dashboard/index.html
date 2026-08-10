@@ -1657,109 +1657,430 @@
   }
 
   function buildOptimizedPrompt(prompt, flags) {
-    const parts = [];
     const p = flags.p;
+    const trimmed = prompt.trim();
 
-    // Role
+    // ── Detect domain ──
+    const domain = detectDomain(p);
+
+    // ── Rewrite the core task text ──
+    const rewritten = rewriteTaskText(trimmed, p, domain);
+
+    // ── Assemble the optimized prompt ──
+    const parts = [];
+
+    // Role — pick a domain-specific expert
     if (!flags.hasRole) {
-      if (p.includes('blog') || p.includes('article') || p.includes('write') || p.includes('post'))
-        parts.push('You are an experienced content writer and editor with expertise in creating engaging, well-structured written content.');
-      else if (p.includes('code') || p.includes('script') || p.includes('program') || p.includes('python') || p.includes('javascript'))
-        parts.push('You are a senior software engineer with strong experience in writing clean, well-documented, production-quality code.');
-      else if (p.includes('email') || p.includes('market'))
-        parts.push('You are a skilled marketing and communications specialist with experience crafting compelling, audience-targeted messaging.');
-      else
-        parts.push('You are a knowledgeable and thoughtful assistant with expertise relevant to the task described below.');
+      parts.push(pickRole(domain));
     }
 
-    // Context
+    // Context — infer from the prompt content
     if (!flags.hasContext) {
       parts.push('');
-      parts.push('## Context');
-      if (p.includes('blog') || p.includes('article'))
-        parts.push('I need a well-researched piece of content that provides genuine value to the reader. The content should be original, informative, and structured for online readability.');
-      else if (p.includes('email'))
-        parts.push('I\'m preparing professional communication that needs to be clear, persuasive, and appropriate for the intended recipients. The tone should match the relationship and purpose.');
-      else if (p.includes('code') || p.includes('script'))
-        parts.push('I\'m working on a project that requires reliable, maintainable code. The solution should follow current best practices and include appropriate error handling.');
-      else
-        parts.push('I\'m looking for a thorough, well-considered response that I can act on directly. Quality and accuracy matter more than speed.');
+      parts.push(inferContext(trimmed, p, domain));
     }
 
-    // Task
+    // The rewritten task (the core of the prompt)
     parts.push('');
-    parts.push('## Task');
-    parts.push(prompt);
+    parts.push(rewritten);
 
     // Audience
     if (!flags.hasAudience) {
       parts.push('');
-      parts.push('## Audience');
-      if (p.includes('blog') || p.includes('article'))
-        parts.push('General readers with moderate familiarity with the topic. Write accessibly without oversimplifying.');
-      else if (p.includes('code') || p.includes('script'))
-        parts.push('A developer who can read and modify the code but would benefit from clear variable names and brief inline comments at non-obvious points.');
-      else
-        parts.push('Assume the reader has general knowledge but is not a deep specialist. Be clear and direct without being condescending.');
+      parts.push(pickAudience(domain, p));
     }
 
-    // Format
+    // Output format
     if (!flags.hasFormat) {
       parts.push('');
-      parts.push('## Output Format');
-      if (p.includes('blog') || p.includes('article'))
-        parts.push('Use a clear heading structure (H2, H3). Open with a hook, develop with supporting points, and close with a takeaway. Aim for 800–1200 words unless otherwise specified.');
-      else if (p.includes('code') || p.includes('script'))
-        parts.push('Provide the complete, runnable code. Include a brief explanation of the approach above the code block. Use clear variable and function names.');
-      else if (p.includes('email'))
-        parts.push('Use a professional email format with a clear subject line suggestion, greeting, body, and sign-off. Keep it concise.');
-      else if (p.includes('list') || p.includes('steps') || p.includes('ideas'))
-        parts.push('Use a numbered or bulleted list with brief explanations for each item. Prioritize actionable, specific entries over generic ones.');
-      else
-        parts.push('Organize the response with clear sections if the content warrants it. Use paragraphs for narrative content and lists for sequential or comparative information.');
+      parts.push(pickFormat(domain, p));
     }
 
     // Constraints
     if (!flags.hasConstraint) {
       parts.push('');
-      parts.push('## Constraints');
-      parts.push('- Stay focused on the specific task described above');
-      parts.push('- Do not include unnecessary preamble or filler content');
-      parts.push('- If you need to make assumptions, state them briefly');
-      if (p.includes('code') || p.includes('script'))
-        parts.push('- Follow current language idioms and best practices\n- Include error handling for likely failure points');
-      if (p.includes('blog') || p.includes('article') || p.includes('write'))
-        parts.push('- Use an active, engaging voice\n- Avoid clichés and generic filler phrases');
+      parts.push(pickConstraints(domain, p));
     }
 
     // Success criteria
     if (!flags.hasSuccess) {
       parts.push('');
-      parts.push('## Success Criteria');
-      parts.push('A successful response will:');
-      if (p.includes('code') || p.includes('script'))
-        parts.push('- Run correctly without modification\n- Be readable and maintainable\n- Handle edge cases appropriately');
-      else if (p.includes('blog') || p.includes('article'))
-        parts.push('- Engage the reader from the opening line\n- Provide concrete, actionable insights\n- Be structured for easy scanning');
-      else if (p.includes('email'))
-        parts.push('- Communicate the key message within the first two sentences\n- Be professional and appropriately toned\n- Include a clear call to action');
-      else
-        parts.push('- Directly address the task without tangents\n- Provide specific, actionable information\n- Be organized for quick comprehension');
+      parts.push(pickSuccessCriteria(domain, p));
     }
 
     return parts.join('\n');
+  }
+
+  function detectDomain(p) {
+    if (/\b(blog|article|essay|post|write an?\b|editorial|opinion piece|column)\b/.test(p)) return 'writing';
+    if (/\b(code|script|program|function|api|debug|refactor|algorithm|class|module|component|python|javascript|typescript|java|rust|sql|html|css|react|node)\b/.test(p)) return 'code';
+    if (/\b(email|e-mail|letter|memo|message to|reply to|respond to)\b/.test(p)) return 'email';
+    if (/\b(market|advertis|campaign|brand|seo|social media|content strategy|copywriting|landing page|ad copy|slogan|tagline)\b/.test(p)) return 'marketing';
+    if (/\b(teach|lesson|course|curriculum|learning|tutorial|explain.{0,15}(to|for)|training|workshop|student)\b/.test(p)) return 'education';
+    if (/\b(analyz|analysis|data|report|metric|dashboard|insight|trend|statistic|chart|graph|csv|spreadsheet)\b/.test(p)) return 'analysis';
+    if (/\b(plan|strategy|roadmap|proposal|business|project plan|action items|timeline|milestones|quarterly)\b/.test(p)) return 'planning';
+    if (/\b(summar|overview|recap|brief|tldr|digest|synopsis|abstract|outline)\b/.test(p)) return 'summary';
+    if (/\b(review|feedback|critique|evaluate|assess|audit|check|improve)\b/.test(p)) return 'review';
+    if (/\b(translate|convert|transform|rewrite|rephrase|paraphrase|reformat)\b/.test(p)) return 'transform';
+    if (/\b(design|wireframe|mockup|ui|ux|layout|prototype|interface|logo)\b/.test(p)) return 'design';
+    if (/\b(recipe|cook|meal|food|ingredient|bake|dish)\b/.test(p)) return 'recipe';
+    if (/\b(legal|contract|terms|agreement|clause|compliance|regulation|policy)\b/.test(p)) return 'legal';
+    if (/\b(resume|cv|cover letter|job|interview|hire|career|portfolio)\b/.test(p)) return 'career';
+    if (/\b(story|poem|fiction|creative|character|narrative|plot|novel|short story|dialogue)\b/.test(p)) return 'creative';
+    if (/\b(compare|pros.{0,5}cons|difference|versus|vs\b|alternative|which is better)\b/.test(p)) return 'comparison';
+    if (/\b(list|ideas|brainstorm|suggest|recommend|options|generate.{0,10}(ideas|names|options))\b/.test(p)) return 'ideation';
+    return 'general';
+  }
+
+  function pickRole(domain) {
+    const roles = {
+      writing: 'You are an experienced content writer and editor who creates clear, engaging, well-structured written content that holds readers\' attention and delivers genuine value.',
+      code: 'You are a senior software engineer who writes clean, well-documented, production-quality code with strong error handling and clear naming conventions.',
+      email: 'You are a professional communications specialist who crafts clear, appropriately toned messages that achieve their intended purpose efficiently.',
+      marketing: 'You are a strategic marketing professional with expertise in persuasive copywriting, audience targeting, and conversion-focused messaging.',
+      education: 'You are an experienced educator and instructional designer who makes complex topics accessible through clear explanations, relevant examples, and progressive skill-building.',
+      analysis: 'You are a data analyst with expertise in extracting actionable insights from information, identifying patterns, and presenting findings in clear, decision-ready formats.',
+      planning: 'You are a strategic planner with experience building actionable roadmaps, identifying dependencies, and breaking complex initiatives into achievable milestones.',
+      summary: 'You are a skilled analyst who distills complex information into concise, accurate summaries that capture the essential points without losing critical nuance.',
+      review: 'You are a thorough reviewer with a constructive approach — you identify specific issues, explain their impact, and recommend concrete improvements.',
+      transform: 'You are a language and format specialist who accurately transforms content while preserving meaning, tone, and intent across conversions.',
+      design: 'You are a UX/UI designer with strong visual design sensibility who creates intuitive, accessible, and aesthetically cohesive interfaces.',
+      recipe: 'You are an experienced chef and recipe developer who creates clear, tested recipes with precise measurements, timing, and technique guidance.',
+      legal: 'You are a legal writing specialist who produces precise, well-structured documents using appropriate terminology while maintaining clarity for the intended reader.',
+      career: 'You are a career development specialist who creates compelling professional documents tailored to specific roles and industries.',
+      creative: 'You are a skilled creative writer with a command of narrative structure, voice, pacing, and the craft techniques that make fiction and poetry resonate.',
+      comparison: 'You are an analytical thinker who evaluates options objectively, considering multiple dimensions and presenting balanced, evidence-based comparisons.',
+      ideation: 'You are a creative strategist skilled at generating diverse, practical ideas and organizing them by relevance, feasibility, and impact.',
+      general: 'You are a knowledgeable assistant with strong analytical and communication skills. Approach the following task thoughtfully and provide a thorough, well-organized response.'
+    };
+    return roles[domain] || roles.general;
+  }
+
+  function rewriteTaskText(original, p, domain) {
+    let text = original;
+
+    // Clean up common vague patterns
+    text = text.replace(/\b(write me|write|create|make|give me|can you|could you|i want you to|i need you to|please)\b\s*/gi, (match) => {
+      return '';
+    }).trim();
+
+    // Capitalize first letter after cleanup
+    if (text.length > 0) {
+      text = text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
+    // If cleanup emptied or mangled the text, fall back to original
+    if (text.length < 5 || text.split(/\s+/).length < 2) {
+      text = original;
+    }
+
+    // Expand vague terms with domain-aware specifics
+    text = text.replace(/\b(something|stuff|things|a thing)\b\s*(about|on|for|related to|regarding)?\s*/gi, (match, vague, prep) => {
+      if (domain === 'writing') return 'a comprehensive, well-structured piece ' + (prep || 'about') + ' ';
+      if (domain === 'code') return 'a working implementation ' + (prep || 'for') + ' ';
+      if (domain === 'marketing') return 'targeted content ' + (prep || 'for') + ' ';
+      return 'a detailed, actionable response ' + (prep || 'about') + ' ';
+    });
+
+    // Replace "good" / "nice" / "great" with more specific modifiers
+    text = text.replace(/\b(a |an )?(good|nice|great|cool|awesome)\b/gi, (match, article) => {
+      if (domain === 'writing') return (article || '') + 'engaging, well-researched';
+      if (domain === 'code') return (article || '') + 'clean, efficient, production-ready';
+      if (domain === 'email') return (article || '') + 'clear, professional, purposeful';
+      if (domain === 'marketing') return (article || '') + 'compelling, conversion-focused';
+      return (article || '') + 'thorough, high-quality';
+    });
+
+    // Add specificity to short/vague prompts
+    const wordCount = text.split(/\s+/).length;
+
+    // Extract the core subject from the prompt for use in expansion
+    const subjectMatch = text.match(/(?:about|on|for|regarding|explaining|describing)\s+(.+?)(?:\.|$)/i);
+    const subject = subjectMatch ? subjectMatch[1].trim() : null;
+
+    // Build the enhanced task
+    const taskParts = [];
+
+    if (domain === 'writing') {
+      taskParts.push('## Task');
+      if (wordCount < 12 && subject) {
+        taskParts.push(`Write a well-structured, engaging piece about ${subject}. Cover the topic with depth and clarity — open with a compelling hook that draws the reader in, develop the key points with supporting evidence or examples, and close with a clear takeaway or call to action.`);
+      } else {
+        taskParts.push(text);
+        if (wordCount < 20) {
+          taskParts.push('');
+          taskParts.push('Approach this with depth and clarity. Open with a compelling hook, develop the key points with concrete examples or evidence, and close with a clear takeaway.');
+        }
+      }
+    } else if (domain === 'code') {
+      taskParts.push('## Task');
+      const langMatch = p.match(/\b(python|javascript|typescript|java|rust|go|c\+\+|c#|ruby|php|swift|kotlin|sql|html|css|react|vue|angular|node)\b/i);
+      const lang = langMatch ? langMatch[1] : null;
+      if (wordCount < 12) {
+        taskParts.push(`${text}${lang ? ' using ' + lang : ''}.`);
+        taskParts.push('');
+        taskParts.push('Requirements:');
+        taskParts.push('- Write clean, readable code with descriptive variable and function names');
+        taskParts.push('- Include error handling for likely failure points');
+        taskParts.push('- Add brief comments only at non-obvious logic');
+        if (lang) taskParts.push(`- Follow current ${lang} idioms and best practices`);
+      } else {
+        taskParts.push(text);
+      }
+    } else if (domain === 'email') {
+      taskParts.push('## Task');
+      if (wordCount < 15) {
+        taskParts.push(`${text}`);
+        taskParts.push('');
+        taskParts.push('The email should:');
+        taskParts.push('- Open with a clear purpose statement');
+        taskParts.push('- Present the key information concisely in the body');
+        taskParts.push('- Close with a specific call to action or next step');
+        taskParts.push('- Maintain a professional, appropriately warm tone throughout');
+      } else {
+        taskParts.push(text);
+      }
+    } else if (domain === 'marketing') {
+      taskParts.push('## Task');
+      taskParts.push(text);
+      if (wordCount < 20) {
+        taskParts.push('');
+        taskParts.push('Focus on:');
+        taskParts.push('- A clear value proposition that resonates with the target audience');
+        taskParts.push('- Persuasive language that drives action without feeling pushy');
+        taskParts.push('- Specific benefits over vague claims');
+      }
+    } else if (domain === 'summary') {
+      taskParts.push('## Task');
+      if (wordCount < 12 && subject) {
+        taskParts.push(`Provide a clear, concise summary of ${subject}. Capture the essential points, key arguments or findings, and any critical details — without losing important nuance. Organize the summary logically so the reader can quickly grasp the core message.`);
+      } else {
+        taskParts.push(text);
+        if (wordCount < 20) {
+          taskParts.push('');
+          taskParts.push('Capture the essential points and key findings without losing critical nuance. Organize the summary so the reader can quickly grasp the core message.');
+        }
+      }
+    } else if (domain === 'analysis') {
+      taskParts.push('## Task');
+      taskParts.push(text);
+      if (wordCount < 20) {
+        taskParts.push('');
+        taskParts.push('Structure the analysis to include:');
+        taskParts.push('- Key findings and patterns identified');
+        taskParts.push('- Supporting evidence or data points');
+        taskParts.push('- Actionable insights or recommendations');
+        taskParts.push('- Any limitations or caveats to note');
+      }
+    } else if (domain === 'planning') {
+      taskParts.push('## Task');
+      taskParts.push(text);
+      if (wordCount < 20) {
+        taskParts.push('');
+        taskParts.push('Include:');
+        taskParts.push('- Clear objectives and success metrics');
+        taskParts.push('- Actionable steps with logical sequencing');
+        taskParts.push('- Key dependencies and potential risks');
+        taskParts.push('- Realistic timeline or milestones');
+      }
+    } else if (domain === 'education') {
+      taskParts.push('## Task');
+      taskParts.push(text);
+      if (wordCount < 20) {
+        taskParts.push('');
+        taskParts.push('Make the explanation:');
+        taskParts.push('- Progressive — start with foundations before advancing');
+        taskParts.push('- Concrete — use relevant examples and analogies');
+        taskParts.push('- Actionable — include practice exercises or next steps where appropriate');
+      }
+    } else if (domain === 'creative') {
+      taskParts.push('## Task');
+      taskParts.push(text);
+      if (wordCount < 20) {
+        taskParts.push('');
+        taskParts.push('Focus on craft: compelling characters or imagery, a clear narrative arc, vivid sensory details, and language that serves the story\'s emotional core.');
+      }
+    } else if (domain === 'comparison') {
+      taskParts.push('## Task');
+      taskParts.push(text);
+      if (wordCount < 20) {
+        taskParts.push('');
+        taskParts.push('For each option, evaluate:');
+        taskParts.push('- Key strengths and limitations');
+        taskParts.push('- Best-fit use cases');
+        taskParts.push('- Notable trade-offs');
+        taskParts.push('Conclude with a clear recommendation based on the comparison.');
+      }
+    } else if (domain === 'ideation') {
+      taskParts.push('## Task');
+      taskParts.push(text);
+      if (wordCount < 20) {
+        taskParts.push('');
+        taskParts.push('Generate diverse, specific ideas — avoid generic suggestions. For each idea, include a one-sentence explanation of why it works and how to act on it. Prioritize by feasibility and impact.');
+      }
+    } else if (domain === 'review') {
+      taskParts.push('## Task');
+      taskParts.push(text);
+      if (wordCount < 20) {
+        taskParts.push('');
+        taskParts.push('Provide:');
+        taskParts.push('- Specific issues identified (not vague impressions)');
+        taskParts.push('- The impact of each issue');
+        taskParts.push('- Concrete recommendations for improvement');
+        taskParts.push('- What works well and should be preserved');
+      }
+    } else if (domain === 'career') {
+      taskParts.push('## Task');
+      taskParts.push(text);
+      if (wordCount < 20) {
+        taskParts.push('');
+        taskParts.push('Tailor the content to the target role and industry. Use strong action verbs, quantify achievements where possible, and focus on demonstrated impact rather than listing responsibilities.');
+      }
+    } else if (domain === 'recipe') {
+      taskParts.push('## Task');
+      taskParts.push(text);
+      if (wordCount < 20) {
+        taskParts.push('');
+        taskParts.push('Include precise measurements, preparation and cooking times, step-by-step instructions, and tips for common mistakes. Note any possible ingredient substitutions.');
+      }
+    } else if (domain === 'transform') {
+      taskParts.push('## Task');
+      taskParts.push(text);
+      if (wordCount < 15) {
+        taskParts.push('');
+        taskParts.push('Preserve the original meaning, tone, and intent accurately. Flag any ambiguities where multiple valid interpretations exist.');
+      }
+    } else if (domain === 'legal') {
+      taskParts.push('## Task');
+      taskParts.push(text);
+      if (wordCount < 20) {
+        taskParts.push('');
+        taskParts.push('Use precise legal terminology where appropriate but maintain readability. Note any areas that may require professional legal review.');
+      }
+    } else {
+      // General domain — still enhance the text
+      taskParts.push('## Task');
+      if (wordCount < 8) {
+        taskParts.push(`${text}. Provide a thorough, well-organized response that directly addresses this request with specific, actionable information.`);
+      } else {
+        taskParts.push(text);
+      }
+    }
+
+    return taskParts.join('\n');
+  }
+
+  function inferContext(original, p, domain) {
+    const contexts = {
+      writing: 'I need well-researched content that provides genuine value to readers. The writing should be original, substantive, and structured for online readability with clear section flow.',
+      code: 'I\'m working on a project that requires reliable, maintainable code. The solution should follow current best practices, handle edge cases, and be ready for production use.',
+      email: 'I\'m preparing professional communication that needs to be clear, persuasive, and appropriately toned for the relationship and purpose.',
+      marketing: 'I\'m developing marketing content that needs to resonate with the target audience, communicate clear value, and drive a specific action or conversion.',
+      education: 'I\'m creating educational material that needs to be accessible, progressive, and effective at building understanding from the learner\'s current level.',
+      analysis: 'I need a structured analysis that surfaces actionable insights from the available information and presents findings in a decision-ready format.',
+      planning: 'I\'m developing a strategic plan that needs clear objectives, actionable steps, realistic timelines, and awareness of dependencies and risks.',
+      summary: 'I need a concise synthesis that captures the essential information accurately while remaining useful and quick to absorb.',
+      review: 'I need a constructive, thorough review that identifies specific strengths and areas for improvement with actionable recommendations.',
+      transform: 'I need accurate transformation of content that preserves the original meaning and nuance while adapting to the target format or language.',
+      design: 'I\'m working on a design that needs to be intuitive, visually cohesive, and accessible while meeting the functional requirements.',
+      recipe: 'I need a reliable recipe with clear instructions that a home cook can follow successfully, including timing, measurements, and technique notes.',
+      legal: 'I need precise, well-structured content that uses appropriate legal terminology while remaining clear to the intended audience.',
+      career: 'I\'m preparing professional career materials that need to be compelling, well-targeted, and effective at communicating my qualifications and impact.',
+      creative: 'I\'m looking for creative writing that demonstrates strong craft — vivid language, compelling structure, and emotional resonance.',
+      comparison: 'I need an objective, balanced comparison that helps me make an informed decision by evaluating options across relevant dimensions.',
+      ideation: 'I\'m looking for diverse, practical ideas that go beyond the obvious. Quantity matters, but each idea should be specific enough to act on.',
+      general: 'I need a thorough, well-organized response that I can use directly. Prioritize accuracy, specificity, and practical value over length.'
+    };
+    return '## Context\n' + (contexts[domain] || contexts.general);
+  }
+
+  function pickAudience(domain, p) {
+    const audiences = {
+      writing: 'Engaged readers with general knowledge of the topic. Write accessibly without oversimplifying — aim for clarity that respects the reader\'s intelligence.',
+      code: 'A developer who can read and modify the code. Use clear naming conventions and brief comments only at non-obvious decision points.',
+      email: 'Professional recipients who value clarity and brevity. Tone should match a respectful professional relationship.',
+      marketing: 'The target customer or client segment. Speak to their needs, pain points, and aspirations in language that feels natural to them.',
+      education: 'Learners who are new to this topic. Build understanding progressively and verify comprehension with examples before advancing.',
+      analysis: 'Decision-makers who need to act on the findings. Lead with insights, support with evidence, and make recommendations clear.',
+      planning: 'Stakeholders and team members who need to understand the plan, their role in it, and the expected outcomes.',
+      creative: 'Readers who appreciate literary craft and are looking for an engaging, resonant reading experience.',
+      general: 'A general audience with moderate background knowledge. Be clear and direct without being condescending.'
+    };
+    return '## Audience\n' + (audiences[domain] || audiences.general);
+  }
+
+  function pickFormat(domain, p) {
+    const formats = {
+      writing: 'Use a clear heading structure (H2, H3). Open with a hook, develop with supporting points and concrete examples, and close with a takeaway. Aim for 800–1200 words unless otherwise specified.',
+      code: 'Provide the complete, runnable code with a brief explanation of the approach above each code block. Use consistent formatting and clear variable/function names.',
+      email: 'Professional email format: suggested subject line, greeting, concise body paragraphs, clear call to action, and sign-off. Keep total length under 200 words unless complexity requires more.',
+      marketing: 'Structure for the target medium (web, social, print). Use a strong headline, clear value proposition, supporting points, and a compelling call to action.',
+      education: 'Start with a brief overview, then break the content into logical sections that build on each other. Include examples, analogies, and practice opportunities where appropriate.',
+      analysis: 'Lead with an executive summary of key findings. Follow with detailed analysis organized by theme or category. Close with recommendations and next steps.',
+      planning: 'Use a structured format with clear sections: objectives, action items (with owners and deadlines if applicable), dependencies, risks, and success metrics.',
+      summary: 'Concise paragraph format. Lead with the core message, follow with key supporting points, and close with implications or next steps. Keep it to 30% or less of the original length.',
+      comparison: 'Use a structured comparison format — either a side-by-side table for quick scanning or organized sections per option. Include a final recommendation with reasoning.',
+      ideation: 'Numbered list with each idea on its own line. Include a one-sentence explanation for each. Group by theme or category if more than 10 items.',
+      review: 'Organize by priority: critical issues first, then improvements, then minor suggestions. Use a consistent format for each item (issue, impact, recommendation).',
+      creative: 'Use the format that best serves the creative work (prose paragraphs, verse stanzas, dialogue, etc.). Let the content dictate the structure.',
+      general: 'Organize with clear sections and headings where the content warrants it. Use paragraphs for explanatory content and lists for sequential or comparative information.'
+    };
+    return '## Output Format\n' + (formats[domain] || formats.general);
+  }
+
+  function pickConstraints(domain, p) {
+    const base = ['- Stay focused on the specific task — no tangents or filler',
+                  '- State assumptions briefly if you need to make any'];
+    const extras = {
+      writing: ['- Use an active, engaging voice throughout',
+                '- Avoid clichés, jargon, and generic filler phrases',
+                '- Every paragraph should advance the reader\'s understanding'],
+      code: ['- Follow current language idioms and best practices',
+             '- Include error handling for likely failure points',
+             '- No placeholder or stub implementations — code should be complete'],
+      email: ['- Keep the total length appropriate for email — concise and scannable',
+              '- One clear call to action, not multiple competing requests'],
+      marketing: ['- Focus on specific benefits, not vague claims',
+                  '- Avoid hyperbole that undermines credibility',
+                  '- Include a clear, single call to action'],
+      education: ['- No unexplained jargon — define technical terms on first use',
+                  '- Build from familiar concepts to new ones'],
+      analysis: ['- Distinguish between facts, inferences, and opinions',
+                 '- Quantify findings wherever possible'],
+      planning: ['- Every action item should be specific enough to act on',
+                 '- Flag dependencies and risks explicitly'],
+      creative: ['- Show, don\'t tell — use sensory details and specific images',
+                 '- Let character actions reveal personality rather than narrating it'],
+    };
+    const domain_extras = extras[domain] || [];
+    return '## Constraints\n' + base.concat(domain_extras).join('\n');
+  }
+
+  function pickSuccessCriteria(domain, p) {
+    const criteria = {
+      writing: '- Engages the reader from the opening line\n- Provides concrete, actionable insights backed by evidence\n- Flows logically with smooth transitions between sections\n- Is structured for easy scanning while rewarding close reading',
+      code: '- Runs correctly without modification\n- Is readable and maintainable by another developer\n- Handles edge cases and error conditions gracefully\n- Follows consistent style and naming conventions',
+      email: '- Communicates the key message within the first two sentences\n- Is professional and appropriately toned\n- Includes a clear, specific call to action\n- Can be read and understood in under 60 seconds',
+      marketing: '- Clearly communicates the value proposition\n- Speaks directly to the target audience\'s needs\n- Drives toward a specific conversion action\n- Feels authentic, not formulaic',
+      education: '- A learner can follow the material without outside resources\n- Concepts build logically on each other\n- Examples are relevant and illuminating\n- The learner knows what to practice or explore next',
+      analysis: '- Findings are supported by evidence\n- Insights are actionable and specific\n- Limitations and assumptions are stated clearly\n- The reader can make a decision based on this analysis',
+      planning: '- Objectives are measurable and time-bound\n- Each step is specific enough to begin immediately\n- Risks are identified with mitigation strategies\n- The plan can be understood by someone not in the room',
+      summary: '- Captures all essential points without distortion\n- Is significantly shorter than the source material\n- Can stand alone without requiring the original\n- Preserves the relative importance of different points',
+      general: '- Directly addresses the task without tangents\n- Provides specific, actionable information the reader can use immediately\n- Is organized for quick comprehension\n- Quality is consistent throughout — no drop-off in later sections'
+    };
+    return '## Success Criteria\nA successful response will:\n' + (criteria[domain] || criteria.general);
   }
 
   // ── Render Results ──
   function renderResults(r) {
     // Original
     const origEl = $('#originalPrompt');
-    origEl.childNodes.forEach(n => { if (n.nodeType === 3) n.remove(); });
+    Array.from(origEl.childNodes).filter(n => n.nodeType === 3).forEach(n => n.remove());
     origEl.insertBefore(document.createTextNode(currentPrompt), origEl.firstChild);
 
     // Optimized
     const optEl = $('#optimizedPrompt');
-    optEl.childNodes.forEach(n => { if (n.nodeType === 3) n.remove(); });
+    Array.from(optEl.childNodes).filter(n => n.nodeType === 3).forEach(n => n.remove());
     optEl.insertBefore(document.createTextNode(r.optimized), optEl.firstChild);
 
     // Score
